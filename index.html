@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ede9fe">
+<title>MeowTracker 🐾</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTWVvd1RyYWNrZXIiLCJzaG9ydF9uYW1lIjoiTWVvd1RyYWNrZXIiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2VkZTlmZSIsInRoZW1lX2NvbG9yIjoiI2VkZTlmZSJ9">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg, #ede9fe 0%, #fdf2f8 50%, #fef3c7 100%);
+    min-height: 100vh;
+    color: #4c1d95;
+  }
+  .container { max-width: 440px; margin: 0 auto; padding: 0 16px 40px; }
+
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 12px; }
+  .header-left { display: flex; align-items: center; gap: 8px; }
+  .header-icon { font-size: 24px; }
+  .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-date { font-size: 13px; color: #7c3aed; background: #f5f3ff; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+
+  /* Cards */
+  .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(124,58,237,0.06); }
+  .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .card-header svg { flex-shrink: 0; }
+  .card-title { font-size: 16px; font-weight: 700; flex: 1; }
+  .card-subtitle { margin: -6px 0 12px; font-size: 13px; color: #8b8ba0; }
+
+  /* Profile */
+  .profile-row { display: flex; align-items: center; gap: 16px; }
+  .avatar { width: 80px; height: 80px; border-radius: 24px; overflow: hidden; flex-shrink: 0; cursor: pointer; position: relative; background: #f5f3ff; border: 3px solid #e9e0ff; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 2px; color: #a78bfa; font-size: 10px; font-weight: 600; }
+  .avatar-placeholder svg { width: 28px; height: 28px; color: #a78bfa; }
+  .avatar-badge { position: absolute; bottom: 4px; right: 4px; background: #8b5cf6; border-radius: 10px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+  .avatar-badge svg { width: 12px; height: 12px; color: white; }
+  .cat-name { font-size: 20px; font-weight: 700; }
+  .cat-details { margin-top: 4px; font-size: 13px; color: #7c3aed; }
+  .profile-form { display: flex; flex-direction: column; gap: 8px; }
+  .profile-form-row { display: flex; gap: 8px; }
+
+  /* Inputs */
+  input[type="text"], input[type="number"], .input {
+    width: 100%; padding: 10px 12px; border-radius: 12px; border: 1.5px solid #e9e0ff;
+    font-size: 14px; font-family: inherit; outline: none; color: #4c1d95;
+    transition: border-color 0.15s; background: white;
+  }
+  input:focus, .input:focus { border-color: #8b5cf6; }
+
+  /* Buttons */
+  .btn-small {
+    padding: 8px 16px; border-radius: 12px; border: none; background: #8b5cf6; color: white;
+    font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: inherit;
+  }
+  .btn-small.secondary { background: #f1f5f9; color: #64748b; }
+  .add-btn {
+    width: 100%; padding: 12px; border-radius: 14px; border: 2px dashed #e9e0ff; background: #faf8ff;
+    color: #7c3aed; font-size: 14px; font-weight: 600; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; gap: 6px; font-family: inherit; transition: all 0.15s;
+  }
+  .add-btn:active { transform: scale(0.98); }
+  .add-btn.orange { background: #fff7ed; border-color: #fed7aa; color: #ea580c; }
+  .remove-btn { background: none; border: none; cursor: pointer; color: #cbd5e1; padding: 2px; display: flex; line-height: 1; }
+
+  /* Traffic Light */
+  .traffic-row { display: flex; gap: 10px; }
+  .traffic-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 8px; border-radius: 16px; border: 2px solid #e9e0ff; cursor: pointer;
+    transition: all 0.2s; background: #f8f5ff; font-family: inherit;
+  }
+  .traffic-btn.active-green { background: #dcfce7; border-color: #22c55e; transform: scale(1.08); box-shadow: 0 4px 16px rgba(34,197,94,0.2); }
+  .traffic-btn.active-yellow { background: #fef9c3; border-color: #eab308; transform: scale(1.08); box-shadow: 0 4px 16px rgba(234,179,8,0.2); }
+  .traffic-btn.active-red { background: #fee2e2; border-color: #ef4444; transform: scale(1.08); box-shadow: 0 4px 16px rgba(239,68,68,0.2); }
+  .traffic-dot { width: 20px; height: 20px; border-radius: 50%; transition: all 0.3s; opacity: 0.35; }
+  .traffic-btn.active-green .traffic-dot, .traffic-btn.active-yellow .traffic-dot, .traffic-btn.active-red .traffic-dot { opacity: 1; }
+  .dot-green { background: #22c55e; }
+  .dot-yellow { background: #eab308; }
+  .dot-red { background: #ef4444; }
+  .traffic-btn.active-green .dot-green { box-shadow: 0 0 12px rgba(34,197,94,0.5); }
+  .traffic-btn.active-yellow .dot-yellow { box-shadow: 0 0 12px rgba(234,179,8,0.5); }
+  .traffic-btn.active-red .dot-red { box-shadow: 0 0 12px rgba(239,68,68,0.5); }
+  .traffic-emoji { font-size: 22px; }
+  .traffic-label { font-size: 11px; font-weight: 600; }
+
+  /* Sleep */
+  .sleep-row { display: flex; gap: 10px; }
+  .sleep-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 16px 8px; border-radius: 16px; border: 2px solid #e9e0ff; cursor: pointer;
+    transition: all 0.2s; background: #f8f5ff; font-family: inherit;
+  }
+  .sleep-btn.active-yes { background: #fef3c7; border-color: #f59e0b; }
+  .sleep-btn.active-no { background: #dcfce7; border-color: #22c55e; }
+  .sleep-emoji { font-size: 28px; }
+  .sleep-label { font-size: 13px; font-weight: 600; }
+  .sleep-sub { font-size: 11px; color: #a78bfa; }
+  .sleep-streak { margin-top: 12px; font-size: 13px; color: #7c3aed; background: #f5f3ff; padding: 8px 12px; border-radius: 12px; text-align: center; font-weight: 500; }
+
+  /* Activity */
+  .activity-badge { font-size: 12px; font-weight: 700; color: #7c3aed; background: #f5f3ff; padding: 3px 10px; border-radius: 20px; }
+  .activity-badge.orange { background: #fff7ed; color: #ea580c; }
+  .activity-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .activity-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #faf8ff; border-radius: 12px; }
+  .activity-emoji { font-size: 20px; }
+  .activity-info { display: flex; flex-direction: column; flex: 1; }
+  .activity-name { font-size: 14px; font-weight: 600; }
+  .activity-mins { font-size: 12px; color: #a78bfa; }
+  .activity-note { font-size: 12px; color: #8b8ba0; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .activity-form { background: #faf8ff; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .type-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .type-chip {
+    padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e9e0ff; font-size: 12px;
+    font-weight: 600; cursor: pointer; background: #f8f5ff; font-family: inherit; color: #4c1d95; transition: all 0.15s;
+  }
+  .type-chip.active { background: #ede9fe; border-color: #8b5cf6; }
+  .form-label { font-size: 11px; font-weight: 600; color: #7c3aed; margin-bottom: 4px; display: block; }
+  .form-actions { display: flex; gap: 8px; }
+
+  /* Feeding */
+  .feeding-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .feeding-item { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #fff7ed; border-radius: 12px; }
+  .feeding-time { font-size: 14px; font-weight: 600; color: #9a3412; }
+
+  /* Summary */
+  .summary-card { background: linear-gradient(135deg, #7c3aed, #a855f7, #ec4899); border-radius: 20px; padding: 20px; margin-bottom: 14px; color: white; }
+  .summary-card .card-title { color: white; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+  .summary-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; background: rgba(255,255,255,0.15); border-radius: 14px; }
+  .summary-value { font-size: 22px; font-weight: 700; }
+  .summary-label { font-size: 11px; opacity: 0.85; font-weight: 500; }
+
+  .footer { text-align: center; padding: 20px 0; font-size: 12px; color: #a78bfa; }
+
+  /* NFC Banner */
+  .nfc-banner {
+    background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border-radius: 16px;
+    padding: 16px 20px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+    animation: slideDown 0.4s ease-out;
+  }
+  .nfc-banner span { font-size: 28px; }
+  .nfc-banner p { font-size: 14px; font-weight: 600; }
+  .nfc-banner small { font-size: 12px; opacity: 0.85; display: block; margin-top: 2px; font-weight: 400; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+// ─── State ───
+const STORAGE_KEY = "meowtracker-data";
+const ACTIVITY_TYPES = [
+  { id: "play", label: "Spielzeit", emoji: "🧶" },
+  { id: "hunt", label: "Jagd-Session", emoji: "🐭" },
+  { id: "zoomies", label: "Zoomies", emoji: "💨" },
+  { id: "cuddle", label: "Kuscheln", emoji: "🤗" },
+  { id: "explore", label: "Erkunden", emoji: "🔍" },
+  { id: "groom", label: "Putzen", emoji: "✨" },
+];
+const HEALTH_OPTIONS = [
+  { value: "green", label: "Alles gut", emoji: "😺" },
+  { value: "yellow", label: "Beobachten", emoji: "😿" },
+  { value: "red", label: "Tierarzt nötig", emoji: "🙀" },
+];
+
+let state = {
+  cat: { name: "Meine Katze", age: "", breed: "", weight: "", photo: null },
+  today: { date: todayStr(), health: null, healthNotes: "", wokeBeforeSix: null, activities: [], feedings: [] },
+  history: [],
+  editingProfile: false,
+  showActivityForm: false,
+  newActivity: { type: "play", minutes: 10, note: "" },
+  nfcBanner: false,
+};
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+// ─── Storage ───
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      state.cat = data.cat || state.cat;
+      if (data.today?.date === todayStr()) {
+        state.today = data.today;
+      } else if (data.today?.date) {
+        state.history = [...(data.history || []), data.today].slice(-30);
+      }
+      if (data.history && !state.history.length) state.history = data.history;
+    }
+  } catch (e) { console.log("No saved data"); }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ cat: state.cat, today: state.today, history: state.history }));
+  } catch (e) { console.error("Save error", e); }
+}
+
+// ─── NFC Check ───
+function checkNFC() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("feed") === "true") {
+    addFeeding();
+    state.nfcBanner = true;
+    // Clean URL
+    window.history.replaceState({}, "", window.location.pathname);
+    setTimeout(() => { state.nfcBanner = false; render(); }, 4000);
+  }
+}
+
+// ─── Actions ───
+function addFeeding() {
+  const now = new Date();
+  const time = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  state.today.feedings.push({ id: Date.now(), time });
+  saveData(); render();
+}
+
+function removeFeeding(id) {
+  state.today.feedings = state.today.feedings.filter(f => f.id !== id);
+  saveData(); render();
+}
+
+function addActivity() {
+  state.today.activities.push({ id: Date.now(), ...state.newActivity });
+  state.newActivity = { type: "play", minutes: 10, note: "" };
+  state.showActivityForm = false;
+  saveData(); render();
+}
+
+function removeActivity(id) {
+  state.today.activities = state.today.activities.filter(a => a.id !== id);
+  saveData(); render();
+}
+
+function setHealth(value) {
+  state.today.health = value;
+  saveData(); render();
+}
+
+function setSleep(value) {
+  state.today.wokeBeforeSix = value;
+  saveData(); render();
+}
+
+function handlePhoto(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const size = 200; canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      const scale = Math.max(size / img.width, size / img.height);
+      const x = (size - img.width * scale) / 2, y = (size - img.height * scale) / 2;
+      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+      state.cat.photo = canvas.toDataURL("image/jpeg", 0.8);
+      saveData(); render();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── SVG Icons ───
+const icons = {
+  camera: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>`,
+  cameraSm: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>`,
+  heart: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+  moon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
+  zap: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>`,
+  utensils: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2v20"/><path d="M19 2v4a4 4 0 0 1-4 4"/><path d="M3 2v7c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2V2"/><path d="M6 2v20"/></svg>`,
+  sparkles: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>`,
+  plus: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  x: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+};
+
+// ─── Render ───
+function render() {
+  const app = document.getElementById("app");
+  const totalMins = state.today.activities.reduce((s, a) => s + (a.minutes || 0), 0);
+  const dateStr = new Date().toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" });
+
+  // Sleep streak
+  let streakText = "";
+  if (state.today.wokeBeforeSix !== null) {
+    const pastStreak = state.history.slice().reverse().reduce((c, d) => d.wokeBeforeSix === false ? c + 1 : -1, 0);
+    const total = Math.max(0, pastStreak) + (state.today.wokeBeforeSix === false ? 1 : 0);
+    if (total > 0) streakText = `🏆 ${total} Tag${total > 1 ? "e" : ""} in Folge nach 6 Uhr – Streak!`;
+    else if (state.today.wokeBeforeSix) streakText = "😴 Morgen wird's besser...";
+  }
+
+  const healthClass = state.today.health ? `active-${state.today.health}` : "";
+
+  app.innerHTML = `
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <span class="header-icon">🐾</span>
+        <h1 class="header-title">MeowTracker</h1>
+      </div>
+      <div class="header-date">${dateStr}</div>
+    </div>
+
+    <!-- NFC Banner -->
+    ${state.nfcBanner ? `<div class="nfc-banner"><span>✅</span><div><p>Fütterung geloggt!</p><small>Via NFC-Tag erkannt</small></div></div>` : ""}
+
+    <!-- Cat Profile -->
+    <div class="card">
+      <div class="profile-row">
+        <div class="avatar" onclick="document.getElementById('photoInput').click()">
+          ${state.cat.photo
+            ? `<img src="${state.cat.photo}" alt="${state.cat.name}">`
+            : `<div class="avatar-placeholder">${icons.camera}<span>Foto</span></div>`}
+          <div class="avatar-badge">${icons.cameraSm}</div>
+          <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)">
+        </div>
+        <div style="flex:1;min-width:0">
+          ${state.editingProfile ? `
+            <div class="profile-form">
+              <input type="text" class="input" placeholder="Name" value="${esc(state.cat.name)}" oninput="state.cat.name=this.value;saveData()">
+              <div class="profile-form-row">
+                <input type="text" class="input" style="flex:1" placeholder="Alter" value="${esc(state.cat.age)}" oninput="state.cat.age=this.value;saveData()">
+                <input type="text" class="input" style="flex:1" placeholder="Gewicht (kg)" value="${esc(state.cat.weight)}" oninput="state.cat.weight=this.value;saveData()">
+              </div>
+              <input type="text" class="input" placeholder="Rasse" value="${esc(state.cat.breed)}" oninput="state.cat.breed=this.value;saveData()">
+              <button class="btn-small" onclick="state.editingProfile=false;render()">${icons.check} Fertig</button>
+            </div>
+          ` : `
+            <div onclick="state.editingProfile=true;render()" style="cursor:pointer">
+              <h2 class="cat-name">${esc(state.cat.name)}</h2>
+              <p class="cat-details">${[state.cat.age, state.cat.breed, state.cat.weight && state.cat.weight + " kg"].filter(Boolean).join(" · ") || "Tippe zum Bearbeiten"}</p>
+            </div>
+          `}
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Traffic Light -->
+    <div class="card">
+      <div class="card-header">${icons.heart}<h3 class="card-title">Gesundheits-Ampel</h3></div>
+      <div class="traffic-row">
+        ${HEALTH_OPTIONS.map(opt => `
+          <button class="traffic-btn ${state.today.health === opt.value ? 'active-' + opt.value : ''}" onclick="setHealth('${opt.value}')">
+            <div class="traffic-dot dot-${opt.value}"></div>
+            <span class="traffic-emoji">${opt.emoji}</span>
+            <span class="traffic-label">${opt.label}</span>
+          </button>
+        `).join("")}
+      </div>
+      ${state.today.health ? `<input type="text" class="input" style="margin-top:12px" placeholder="Notiz (optional)..." value="${esc(state.today.healthNotes)}" oninput="state.today.healthNotes=this.value;saveData()">` : ""}
+    </div>
+
+    <!-- Sleep -->
+    <div class="card">
+      <div class="card-header">${icons.moon}<h3 class="card-title">Schlaf-Alarm</h3></div>
+      <p class="card-subtitle">Hat dich die Katze vor 6 Uhr geweckt?</p>
+      <div class="sleep-row">
+        <button class="sleep-btn ${state.today.wokeBeforeSix === true ? 'active-yes' : ''}" onclick="setSleep(true)">
+          <span class="sleep-emoji">😾</span>
+          <span class="sleep-label">Ja, vor 6 Uhr</span>
+          <span class="sleep-sub">Typisch...</span>
+        </button>
+        <button class="sleep-btn ${state.today.wokeBeforeSix === false ? 'active-no' : ''}" onclick="setSleep(false)">
+          <span class="sleep-emoji">😸</span>
+          <span class="sleep-label">Nein, nach 6 Uhr</span>
+          <span class="sleep-sub">Wunder!</span>
+        </button>
+      </div>
+      ${streakText ? `<div class="sleep-streak">${streakText}</div>` : ""}
+    </div>
+
+    <!-- Activities -->
+    <div class="card">
+      <div class="card-header">${icons.zap}<h3 class="card-title">Aktivitäten</h3><div class="activity-badge">${totalMins} min</div></div>
+      ${state.today.activities.length ? `<div class="activity-list">${state.today.activities.map(act => {
+        const t = ACTIVITY_TYPES.find(x => x.id === act.type);
+        return `<div class="activity-item">
+          <span class="activity-emoji">${t?.emoji || "🐱"}</span>
+          <div class="activity-info"><span class="activity-name">${t?.label || act.type}</span><span class="activity-mins">${act.minutes} min</span></div>
+          ${act.note ? `<span class="activity-note">${esc(act.note)}</span>` : ""}
+          <button class="remove-btn" onclick="removeActivity(${act.id})">${icons.x}</button>
+        </div>`;
+      }).join("")}</div>` : ""}
+      ${state.showActivityForm ? `
+        <div class="activity-form">
+          <div class="type-grid">
+            ${ACTIVITY_TYPES.map(t => `<button class="type-chip ${state.newActivity.type === t.id ? 'active' : ''}" onclick="state.newActivity.type='${t.id}';render()">${t.emoji} ${t.label}</button>`).join("")}
+          </div>
+          <div class="profile-form-row">
+            <div style="flex:1"><label class="form-label">Minuten</label><input type="number" class="input" min="1" value="${state.newActivity.minutes}" oninput="state.newActivity.minutes=parseInt(this.value)||0"></div>
+            <div style="flex:2"><label class="form-label">Notiz</label><input type="text" class="input" placeholder="optional..." value="${esc(state.newActivity.note)}" oninput="state.newActivity.note=this.value"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-small" onclick="addActivity()">${icons.check} Hinzufügen</button>
+            <button class="btn-small secondary" onclick="state.showActivityForm=false;render()">Abbrechen</button>
+          </div>
+        </div>
+      ` : `<button class="add-btn" onclick="state.showActivityForm=true;render()">${icons.plus} Aktivität hinzufügen</button>`}
+    </div>
+
+    <!-- Futter Log -->
+    <div class="card">
+      <div class="card-header">${icons.utensils}<h3 class="card-title">Futter-Log</h3><div class="activity-badge orange">${state.today.feedings.length}× gefüttert</div></div>
+      <p class="card-subtitle">NFC-Tag ans Handy halten oder manuell loggen</p>
+      ${state.today.feedings.length ? `<div class="feeding-list">${state.today.feedings.map(f =>
+        `<div class="feeding-item"><span>🍽️</span><span class="feeding-time">${f.time}</span><button class="remove-btn" onclick="removeFeeding(${f.id})">${icons.x}</button></div>`
+      ).join("")}</div>` : ""}
+      <button class="add-btn orange" onclick="addFeeding()">${icons.plus} Fütterung loggen</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-card">
+      <div class="card-header">${icons.sparkles}<h3 class="card-title" style="color:white">Tages-Check</h3></div>
+      <div class="summary-grid">
+        <div class="summary-item"><span class="summary-value">${state.today.health ? HEALTH_OPTIONS.find(h => h.value === state.today.health)?.emoji : "—"}</span><span class="summary-label">Gesundheit</span></div>
+        <div class="summary-item"><span class="summary-value">${state.today.wokeBeforeSix === null ? "—" : state.today.wokeBeforeSix ? "😾" : "😸"}</span><span class="summary-label">Schlaf</span></div>
+        <div class="summary-item"><span class="summary-value">${totalMins}m</span><span class="summary-label">Aktivität</span></div>
+        <div class="summary-item"><span class="summary-value">${state.today.feedings.length}×</span><span class="summary-label">Futter</span></div>
+      </div>
+    </div>
+
+    <div class="footer"><p>MeowTracker 🐾 Daten werden lokal gespeichert</p></div>
+  `;
+}
+
+function esc(str) { return (str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// ─── Init ───
+loadData();
+checkNFC();
+render();
+</script>
+</body>
+</html>
